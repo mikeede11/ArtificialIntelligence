@@ -88,166 +88,250 @@ def checkDown(board, color, row, col):
     if row == 0:
         return 0
     startColor = board[row - 1][col]
+    if startColor == 0:
+            return 0
     if startColor == color: #ok this is an opportunity for us to lengthen a segment
         if row - 3 >= 0 and board[row - 3][col] == board[row - 2][col] and board[row - 2][col] == board[row - 1][col]:
-            return 60
+            return 150
         elif row - 2 >= 0 and board[row - 2][col] == board[row - 1][col]:
-            return 4
+            return 8
         else:
             return 2
     
     if row - 3 >= 0 and board[row - 3][col] == board[row - 2][col] and board[row - 2][col] == board[row - 1][col]:
             return 50
     elif row - 2 >= 0 and board[row - 2][col] == board[row - 1][col]:
-            return 3
+            return 6
     else:
             return 1
+
+def heuristicValue(contiguousChips):
+    value = 0
+    if contiguousChips > 0:
+        if contiguousChips == 1:
+            value = 2
+        elif contiguousChips == 2:
+            value = 8
+        else:
+            value = 150
+    elif contiguousChips < 0:
+        if contiguousChips == -1:
+            value = 1
+        elif contiguousChips == -2:
+            value = 6
+        else:
+            value = 50
+    return value
 
 def checkHorizontal(board, color, row, col):
     #similar to checkdown but instead change the columns
     leftValue = 0
     rightValue = 0
+    leftEndChip = 1
+    rightEndChip = 1
     if col - 1 >= 0:#check left side
         startColor = board[row][col - 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                if col - i >= 0 and board[row][col - i] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break
-        else: #dif color
-            for i in range(1,4):
-                if col - i >= 0 and board[row][col - i] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    if col - i >= 0 and board[row][col - i] == startColor:
+                        leftValue = i
+                    elif col - i >= 0 and board[row][col - i] == 0:
+                        leftEndChip = 0
+                        break
+                    else:
+                        break
+            else: #dif color
+                for i in range(1,4):
+                    if col - i >= 0 and board[row][col - i] == startColor:
+                        leftValue = -i
+                    elif col - i >= 0 and board[row][col - i] == 0:
+                        leftEndChip = 0
+                    else:
+                        break
 
     if col + 1 < COLUMN_COUNT:#check right side
         startColor = board[row][col + 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break #either the end of the board or the streak is broken - stop loop
-        else: #dif color
-            for i in range(1,4):
-                if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
-    return leftValue + rightValue
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
+                        rightValue = i
+                    elif  col + i < COLUMN_COUNT and board[row][col + i] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break #either the end of the board or the streak is broken - stop loop
+            else: #dif color
+                for i in range(1,4):
+                    if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
+                        rightValue = -i
+                    elif col + i < COLUMN_COUNT and board[row][col + i] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break
+    if leftValue > 0 and rightValue > 0:
+        if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
+            return 150
+        elif leftValue + rightValue == 2:
+            return 8
+        else:
+            return 150
+    if leftValue < 0 and rightValue < 0:
+        if leftValue + rightValue == -2 and leftEndChip == 0 and rightEndChip == 0:
+            return 50
+        elif leftValue + rightValue == -2:
+            return 6
+        else:
+            return 50
+    return heuristicValue(leftValue) + heuristicValue(rightValue)
 
 def checkDiagonal1(board, color, row, col):
     #similar to checkdown but instead change the columns
     leftValue = 0
     rightValue = 0
+    leftEndChip = 1
+    rightEndChip = 1
     if col - 1 >= 0 and row - 1 >= 0:#check left side
         startColor = board[row - 1][col - 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                r = row - i
-                c = col - i
-                if r >= 0 and c >= 0 and board[r][c] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break
-        else: #dif color
-            for i in range(1,4):
-                r = row - i
-                c = col - i
-                if r >= 0 and c >= 0 and board[r][c] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    r = row - i
+                    c = col - i
+                    if r >= 0 and c >= 0 and board[r][c] == startColor:
+                        leftValue = i
+                    elif r >= 0 and c >= 0 and board[r][c] == 0:
+                        leftEndChip = 0
+                    else:
+                        break
+            else: #dif color
+                for i in range(1,4):
+                    r = row - i
+                    c = col - i
+                    if r >= 0 and c >= 0 and board[r][c] == startColor:
+                        leftValue = -i
+                    elif r >= 0 and c >= 0 and board[r][c] == 0:
+                        leftEndChip = 0
+                        break
+                    else:
+                        break
 
     if row + 1 < ROW_COUNT and col + 1 < COLUMN_COUNT:#check right side
         startColor = board[row + 1][col + 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                r = row + i
-                c = col + i
-                if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break #either the end of the board or the streak is broken - stop loop
-        else: #dif color
-            for i in range(1,4):
-                r = row + i
-                c = col + i
-                if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
-    return leftValue + rightValue
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    r = row + i
+                    c = col + i
+                    if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
+                        rightValue = i
+                    elif r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break #either the end of the board or the streak is broken - stop loop
+            else: #dif color
+                for i in range(1,4):
+                    r = row + i
+                    c = col + i
+                    if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
+                        rightValue = -i
+                    elif r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break
+    if leftValue > 0 and rightValue > 0:
+        if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
+            return 150
+        elif leftValue + rightValue == 2:
+            return 8
+        else:
+            return 150
+    if leftValue < 0 and rightValue < 0:
+        if leftValue + rightValue == -2 and leftEndChip == 0 and rightEndChip == 0:
+            return 50
+        elif leftValue + rightValue == -2:
+            return 6
+        else:
+            return 50
+    return heuristicValue(leftValue) + heuristicValue(rightValue)
 
     
 
 def checkDiagonal2(board, color, row, col):
     leftValue = 0
     rightValue = 0
+    leftEndChip = 1
+    rightEndChip = 1
     if row + 1 < ROW_COUNT and col - 1 >= 0:#check left side
         startColor = board[row + 1][col - 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                r = row + i
-                c = col - i
-                if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break
-        else: #dif color
-            for i in range(1,4):
-                r = row + i
-                c = col - i
-                if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    r = row + i
+                    c = col - i
+                    if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
+                        leftValue = i
+                    elif r < ROW_COUNT and c >= 0 and board[r][c] == 0:
+                        leftEndChip = 0
+                        break
+                    else:
+                        break
+            else: #dif color
+                for i in range(1,4):
+                    r = row + i
+                    c = col - i
+                    if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
+                        leftValue = -i
+                    elif r < ROW_COUNT and c >= 0 and board[r][c] == 0:
+                        leftEndChip = 0
+                        break
+                    else:
+                        break
 
     if row - 1 >= 0 and col + 1 < COLUMN_COUNT:#check right side
         startColor = board[row - 1][col + 1]
-        if startColor == color: #in the case that the adjacent chip is the same color
-            for i in range(1,4):
-                r = row - i
-                c = col + i
-                if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
-                    leftValue = i + i
-                    if leftValue == 6:
-                        leftValue = 60
-                else:
-                    break #either the end of the board or the streak is broken - stop loop
-        else: #dif color
-            for i in range(1,4):
-                r = row - i
-                c = col + i
-                if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
-                    rightValue = i + (i - 1)
-                    if rightValue == 5:
-                        rightValue = 50
-                else:
-                    break
-    return leftValue + rightValue
+        if startColor != 0:
+            if startColor == color: #in the case that the adjacent chip is the same color
+                for i in range(1,4):
+                    r = row - i
+                    c = col + i
+                    if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
+                        rightValue = i
+                    elif r >= 0 and c < COLUMN_COUNT and board[r][c] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break #either the end of the board or the streak is broken - stop loop
+            else: #dif color
+                for i in range(1,4):
+                    r = row - i
+                    c = col + i
+                    if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
+                        rightValue = -i
+                    elif r >= 0 and c < COLUMN_COUNT and board[r][c] == 0:
+                        rightEndChip = 0
+                        break
+                    else:
+                        break
+    if leftValue > 0 and rightValue > 0:
+        if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
+            return 150
+        elif leftValue + rightValue == 2:
+            return 8
+        else:
+            return 150
+    if leftValue < 0 and rightValue < 0:
+        if leftValue + rightValue == -2 and leftEndChip == 0 and rightEndChip == 0:
+            return 50
+        elif leftValue + rightValue == -2:
+            return 6
+        else:
+            return 50
+    return heuristicValue(leftValue) + heuristicValue(rightValue)
 
     #starting from row -1 for each consecutive color dhip you hit add to counter 
 def evalMove(board, color, row, col):
@@ -255,6 +339,11 @@ def evalMove(board, color, row, col):
     value += checkDown(board,color, row, col)
     value += checkHorizontal(board,color, row, col)
     value += checkDiagonal1(board,color, row, col)
+    # print("Numbers for col: ", col)
+    # print("CD: ", checkDown(board,color, row, col))
+    # print("CH: ", checkHorizontal(board,color, row, col))
+    # print("CD1: ", checkDiagonal1(board,color, row, col))
+    # print("CD2: ", checkDiagonal2(board,color, row, col))
     value += checkDiagonal2(board,color, row, col)
     return value
     #yada
@@ -294,7 +383,7 @@ for i in range(100):
     turn = 0
 
     board = create_board()
-    print_board(board)
+    # print_board(board)
     game_over = False
 
     while not game_over:
@@ -304,13 +393,13 @@ for i in range(100):
         if turn % 2 == 1 and not game_over:#PLAYER 2 RANDOM AGENT
             MoveRandom(board,BLUE_INT) #EXECUTE MOVE
 
-        #print_board(board) #PRINT UPDATE
+        # print_board(board) #PRINT UPDATE
         
         #CHECK GAME STATUS AFTER EACH MOVE
         if game_is_won(board, RED_INT): 
             game_over = True
             agent1Wins += 1
-            #print(colored("Red wins!", 'red'))
+            print(colored("Red wins!", 'red'))
         if game_is_won(board, BLUE_INT):
             game_over = True
             randomAgentWins += 1
