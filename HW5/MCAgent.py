@@ -476,20 +476,6 @@ def MCAgent(board, color):
 
 def monteCarloPlayer(board, color):
     #go through the columns - if valid then simulate a game 100 times both are doing random moves 
-    
-    # current_wins = 0
-    # simulations = 100
-    # valid_locations = get_valid_locations(board)
-    # col_prob = dict().fromkeys(valid_locations, None)
-    # for col in valid_locations:
-    #     for x in range(simulations):
-    #         boardCopy = deepcopy(board)
-    #         row = get_next_open_row(boardCopy, col)
-    #         drop_chip(boardCopy, row, col, color)
-    #         current_wins += play_game(boardCopy, color)
-    #     col_prob[col] = current_wins / simulations
-    #     current_wins = 0
-    #get the best slot 
     best_slot = MCAgent(board, color)
     row = get_next_open_row(board, best_slot)
     drop_chip(board, row, best_slot, color)
