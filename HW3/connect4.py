@@ -84,13 +84,22 @@ def MoveRandom(board, color):
     row = get_next_open_row(board, column)
     drop_chip(board, row, column, color)
 
+# *(how many in a row to the side of the considered position)
+####################Heuristic Value Chart####################
+# How many in a row*#    Same Color   #    Opposite Color   #
+#############################################################
+#        0          #       0         #         0           #
+#        1          #       2         #         1           #
+#        2          #       8         #         6           #
+#        3          #      150        #        50           #
+#############################################################
 def checkDown(board, color, row, col):
     if row == 0:
         return 0
     startColor = board[row - 1][col]
     if startColor == 0:
             return 0
-    if startColor == color: #ok this is an opportunity for us to lengthen a segment
+    if startColor == color: 
         if row - 3 >= 0 and board[row - 3][col] == board[row - 2][col] and board[row - 2][col] == board[row - 1][col]:
             return 150
         elif row - 2 >= 0 and board[row - 2][col] == board[row - 1][col]:
@@ -124,7 +133,6 @@ def heuristicValue(contiguousChips):
     return value
 
 def checkHorizontal(board, color, row, col):
-    #similar to checkdown but instead change the columns
     leftValue = 0
     rightValue = 0
     leftEndChip = 1
@@ -134,6 +142,15 @@ def checkHorizontal(board, color, row, col):
         if startColor != 0:
             if startColor == color: #in the case that the adjacent chip is the same color
                 for i in range(1,4):
+
+                    # (Checking Explanation) if the current position we are considering (board[r][c]) is in bounds and 
+                    # it is the same color as our own chip then give the value the current i value which 
+                    # tells us how many consecutive chips we have seen and this can be used later for calculating a heuristic value
+                    # otherwise if the current position is in bounds and the space is empty set this sides endChip = 0 (this is to avoid being double trapped)
+                    # and break - we are done with consecutive chips. Otherwise we must be out of bounds and break.
+                    # In summary this code segment evalutes the types of chips on one side (wether that be left/ right horizontal/diagonal) and how many 
+                    # consecutive chips are there and wether they end in an empty space. this information is used to give heuristic values to a move.
+                    # This code segment is a recurrent theme in these check functions and this explanation can be applied to all of them.
                     if col - i >= 0 and board[row][col - i] == startColor:
                         leftValue = i
                     elif col - i >= 0 and board[row][col - i] == 0:
@@ -141,8 +158,11 @@ def checkHorizontal(board, color, row, col):
                         break
                     else:
                         break
-            else: #dif color
+
+            else: #adjacent chip is opposite color
                 for i in range(1,4):
+
+                    #See (Checking Explanation) above 
                     if col - i >= 0 and board[row][col - i] == startColor:
                         leftValue = -i
                     elif col - i >= 0 and board[row][col - i] == 0:
@@ -155,15 +175,19 @@ def checkHorizontal(board, color, row, col):
         if startColor != 0:
             if startColor == color: #in the case that the adjacent chip is the same color
                 for i in range(1,4):
+
+                    #See (Checking Explanation) above 
                     if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
                         rightValue = i
                     elif  col + i < COLUMN_COUNT and board[row][col + i] == 0:
                         rightEndChip = 0
                         break
                     else:
-                        break #either the end of the board or the streak is broken - stop loop
-            else: #dif color
+                        break 
+            else: #adjacent chip is opposite color
                 for i in range(1,4):
+
+                    #See (Checking Explanation) above 
                     if col + i < COLUMN_COUNT and board[row][col + i] == startColor:
                         rightValue = -i
                     elif col + i < COLUMN_COUNT and board[row][col + i] == 0:
@@ -171,6 +195,9 @@ def checkHorizontal(board, color, row, col):
                         break
                     else:
                         break
+
+
+    # Now that we have the information from the above code we can assign heuristic values and return them (See heuristic value chart above)
     if leftValue > 0 and rightValue > 0:
         if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
             return 150
@@ -188,7 +215,6 @@ def checkHorizontal(board, color, row, col):
     return heuristicValue(leftValue) + heuristicValue(rightValue)
 
 def checkDiagonal1(board, color, row, col):
-    #similar to checkdown but instead change the columns
     leftValue = 0
     rightValue = 0
     leftEndChip = 1
@@ -200,16 +226,20 @@ def checkDiagonal1(board, color, row, col):
                 for i in range(1,4):
                     r = row - i
                     c = col - i
+
+                    #See (Checking Explanation) above 
                     if r >= 0 and c >= 0 and board[r][c] == startColor:
                         leftValue = i
                     elif r >= 0 and c >= 0 and board[r][c] == 0:
                         leftEndChip = 0
                     else:
                         break
-            else: #dif color
+            else: #adjacent chip is opposite color
                 for i in range(1,4):
                     r = row - i
                     c = col - i
+
+                    #See (Checking Explanation) above 
                     if r >= 0 and c >= 0 and board[r][c] == startColor:
                         leftValue = -i
                     elif r >= 0 and c >= 0 and board[r][c] == 0:
@@ -225,17 +255,21 @@ def checkDiagonal1(board, color, row, col):
                 for i in range(1,4):
                     r = row + i
                     c = col + i
+
+                    #See (Checking Explanation) above 
                     if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
                         rightValue = i
                     elif r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == 0:
                         rightEndChip = 0
                         break
                     else:
-                        break #either the end of the board or the streak is broken - stop loop
-            else: #dif color
+                        break
+            else: #adjacent chip is opposite color
                 for i in range(1,4):
                     r = row + i
                     c = col + i
+
+                    #See (Checking Explanation) above 
                     if r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == startColor:
                         rightValue = -i
                     elif r < ROW_COUNT and c < COLUMN_COUNT and board[r][c] == 0:
@@ -243,6 +277,8 @@ def checkDiagonal1(board, color, row, col):
                         break
                     else:
                         break
+
+    # Now that we have the information from the above code we can assign heuristic values and return them (See heuristic value chart above)
     if leftValue > 0 and rightValue > 0:
         if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
             return 150
@@ -270,9 +306,12 @@ def checkDiagonal2(board, color, row, col):
         startColor = board[row + 1][col - 1]
         if startColor != 0:
             if startColor == color: #in the case that the adjacent chip is the same color
-                for i in range(1,4):
+                for i in range(1,4): # consider chips that are 1 circle away, 2 circles away, and 3 circles away
+                    # these calculations get the next position in the diagonal we are considering
                     r = row + i
-                    c = col - i
+                    c = col - i 
+
+                    #See (Checking Explanation) above 
                     if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
                         leftValue = i
                     elif r < ROW_COUNT and c >= 0 and board[r][c] == 0:
@@ -280,10 +319,13 @@ def checkDiagonal2(board, color, row, col):
                         break
                     else:
                         break
-            else: #dif color
-                for i in range(1,4):
+            else: # In the case that the adjacent chip is the opposite color
+                for i in range(1,4): # consider chips that are 1 circle away, 2 circles away, and 3 circles away
+                    # these calculations get the next position in the diagonal we are considering
                     r = row + i
                     c = col - i
+
+                    #See (Checking Explanation) above 
                     if r < ROW_COUNT and c >= 0 and board[r][c] == startColor:
                         leftValue = -i
                     elif r < ROW_COUNT and c >= 0 and board[r][c] == 0:
@@ -292,24 +334,29 @@ def checkDiagonal2(board, color, row, col):
                     else:
                         break
 
-    if row - 1 >= 0 and col + 1 < COLUMN_COUNT:#check right side
+    if row - 1 >= 0 and col + 1 < COLUMN_COUNT:# check right side
         startColor = board[row - 1][col + 1]
         if startColor != 0:
             if startColor == color: #in the case that the adjacent chip is the same color
-                for i in range(1,4):
+                for i in range(1,4):# consider chips that are 1 circle away, 2 circles away, and 3 circles away
+                    # these calculations get the next position in the diagonal we are considering
                     r = row - i
                     c = col + i
+
+                    #See (Checking Explanation) above 
                     if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
                         rightValue = i
                     elif r >= 0 and c < COLUMN_COUNT and board[r][c] == 0:
                         rightEndChip = 0
                         break
                     else:
-                        break #either the end of the board or the streak is broken - stop loop
-            else: #dif color
+                        break 
+            else: #in the case that the adjacent chip is the opposite color
                 for i in range(1,4):
                     r = row - i
                     c = col + i
+
+                    #See (Checking Explanation) above 
                     if r >= 0 and c < COLUMN_COUNT and board[r][c] == startColor:
                         rightValue = -i
                     elif r >= 0 and c < COLUMN_COUNT and board[r][c] == 0:
@@ -317,6 +364,8 @@ def checkDiagonal2(board, color, row, col):
                         break
                     else:
                         break
+
+    # Now that we have the information from the above code we can assign heuristic values and return them (See heuristic value chart above)
     if leftValue > 0 and rightValue > 0:
         if leftValue + rightValue == 2 and leftEndChip == 0 and rightEndChip == 0:
             return 150
@@ -333,52 +382,52 @@ def checkDiagonal2(board, color, row, col):
             return 50
     return heuristicValue(leftValue) + heuristicValue(rightValue)
 
-    #starting from row -1 for each consecutive color dhip you hit add to counter 
+'''This function evaluates how good dropping a chip for our color at the given position would be given the state of the board
+   It does this by checking the opportunity in each direction - looking down, horizontal, and at both diagonals. It sums up
+   the values for each consideration to give an overall heuristic value for this move'''
 def evalMove(board, color, row, col):
     value = 0
     value += checkDown(board,color, row, col)
     value += checkHorizontal(board,color, row, col)
     value += checkDiagonal1(board,color, row, col)
+    value += checkDiagonal2(board,color, row, col)
     # print("Numbers for col: ", col)
     # print("CD: ", checkDown(board,color, row, col))
     # print("CH: ", checkHorizontal(board,color, row, col))
     # print("CD1: ", checkDiagonal1(board,color, row, col))
     # print("CD2: ", checkDiagonal2(board,color, row, col))
-    value += checkDiagonal2(board,color, row, col)
     return value
-    #yada
-    #double trap???
-    #special case horizontal with 2 chips and 
 
+'''This function looks at all the columns we can put a chip in and determines which seems to be the optimal one'''
 def agent1move(board, color):
     bestColumn = -1
     row = -1
     bestMoveValue = -sys.maxsize - 1
-    currentMoveValue = -sys.maxsize - 1
-    '''this method needs to put the color in each column, analyze the heuristic value for that color for each and then return the lowest one '''
-    
+    # # this method needs to put the color in each column, analyze the heuristic value for that color for each and then return the lowest one # #
     valid_locations = get_valid_locations(board)
     for col in valid_locations:
         row = get_next_open_row(board, col)
-        currentMoveVal = evalMove(board, color, row, col)
+        currentMoveVal = evalMove(board, color, row, col) # this function evaluates how good dropping a chip in this column would be
         if currentMoveVal > bestMoveValue:
             bestMoveValue = currentMoveVal
             bestColumn = col
     return bestColumn
 
+''' The Function that plays the game with heuristics. 
+   Give it the current state of the board and its color
+    and it will drop a chip in the column that is deemed
+     optimal by the heuristics'''
 def moveHeuristic(board, color):
     column = agent1move(board, color) #analyze board state and pick the optimal column based on heuristic(s)
     row = get_next_open_row(board, column)
     drop_chip(board, row, column, color)
 
-def lookAhead(board, color, moves):
-    tree = 0
-    #fill in
-
 
 # # # # # # # # # # # # # # main execution of the game # # # # # # # # # # # # # #
 agent1Wins = 0
 randomAgentWins = 0
+
+# # We execute the game 100X against random to get a gage on how well it performs on average # #
 for i in range(100):
     turn = 0
 
@@ -393,7 +442,7 @@ for i in range(100):
         if turn % 2 == 1 and not game_over:#PLAYER 2 RANDOM AGENT
             MoveRandom(board,BLUE_INT) #EXECUTE MOVE
 
-        # print_board(board) #PRINT UPDATE
+        print_board(board) #PRINT UPDATE
         
         #CHECK GAME STATUS AFTER EACH MOVE
         if game_is_won(board, RED_INT): 
@@ -403,7 +452,6 @@ for i in range(100):
         if game_is_won(board, BLUE_INT):
             game_over = True
             randomAgentWins += 1
-            print_board(board)
             print(colored("Blue wins!", 'blue'))
         if len(get_valid_locations(board)) == 0:
             game_over = True

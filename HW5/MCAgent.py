@@ -523,35 +523,38 @@ mcWins = 0
 randomAgentWins = 0
 
 # # We execute the game 10X against my own heuristic to get a gage on how well it performs on average # #
-for i in range(10):
-    turn = 0
+# for i in range(10):
+turn = 0
 
-    board = create_board()
-    # print_board(board)
-    game_over = False
+board = create_board()
+print_board(board)
+game_over = False
 
-    while not game_over:
-        if turn % 2 == 0:#PLAYER 1 ME / MY AGENT
-            monteCarloPlayer(board,RED_INT)
+while not game_over:
+    if turn % 2 == 0:#PLAYER 1 ME / MY AGENT
+        my_col = int(input("Please Enter 0 - 7 for column: "))
+        row = get_next_open_row(board, my_col)
+        drop_chip(board, row, my_col, BLUE_INT) 
 
-        if turn % 2 == 1 and not game_over:#PLAYER 2 RANDOM AGENT
-            inputHeuristic(board,BLUE_INT) #EXECUTE MOVE
+    if turn % 2 == 1 and not game_over:#PLAYER 2 RANDOM AGENT
+        monteCarloPlayer(board,RED_INT)
+        # inputHeuristic(board,BLUE_INT) #EXECUTE MOVE
 
-        print_board(board) #PRINT UPDATE
-        
-        #CHECK GAME STATUS AFTER EACH MOVE
-        if game_is_won(board, RED_INT): 
-            game_over = True
-            mcWins += 1
-            print(colored("Red wins!", 'red'))
-        if game_is_won(board, BLUE_INT):
-            game_over = True
-            randomAgentWins += 1
-            print(colored("Blue wins!", 'blue'))
-        if len(get_valid_locations(board)) == 0:
-            game_over = True
-            print(colored("Draw!", 'blue'))
-        turn += 1 #NO CONDITIONS ABOVE WAS TRUE game_over is still false well do it again. go to top
+    print_board(board) #PRINT UPDATE
+    
+    #CHECK GAME STATUS AFTER EACH MOVE
+    if game_is_won(board, RED_INT): 
+        game_over = True
+        mcWins += 1
+        print(colored("Red wins!", 'red'))
+    if game_is_won(board, BLUE_INT):
+        game_over = True
+        randomAgentWins += 1
+        print(colored("Blue wins!", 'blue'))
+    if len(get_valid_locations(board)) == 0:
+        game_over = True
+        print(colored("Draw!", 'blue'))
+    turn += 1 #NO CONDITIONS ABOVE WAS TRUE game_over is still false well do it again. go to top
 
 print("Monte Carlo Agent won ", mcWins, " times")
 print("Heuristic Agent won ", randomAgentWins, " times")
